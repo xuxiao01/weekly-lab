@@ -12,7 +12,7 @@ function prefersReducedMotion() {
 export function usePageTransition(
   contentRef: Ref<HTMLElement | null>,
   currentIndex: Ref<number>,
-  totalPages: number,
+  totalPages: Ref<number>,
 ) {
   const isAnimating = ref(false)
   let ctx: gsap.Context | undefined
@@ -37,7 +37,7 @@ export function usePageTransition(
 
   async function transitionTo(newIndex: number) {
     if (isAnimating.value || newIndex === currentIndex.value) return
-    if (newIndex < 0 || newIndex >= totalPages) return
+    if (newIndex < 0 || newIndex >= totalPages.value) return
 
     isAnimating.value = true
     const el = contentRef.value
@@ -70,7 +70,7 @@ export function usePageTransition(
   }
 
   function goNext() {
-    if (currentIndex.value >= totalPages - 1) return
+    if (currentIndex.value >= totalPages.value - 1) return
     return transitionTo(currentIndex.value + 1)
   }
 

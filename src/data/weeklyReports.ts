@@ -5,7 +5,6 @@ export interface WeeklyReport {
   shortDateRange: string
   partLabel: string
   title: string
-  summary: string
   completed: {
     title: string
     description: string
@@ -16,75 +15,84 @@ export interface WeeklyReport {
   }[]
 }
 
-export const weeklyReports: WeeklyReport[] = [
+export const defaultMeta = {
+  weekLabel: '第 23 周',
+  dateRange: '2026.06.01 - 2026.06.05',
+  shortDateRange: '06.01 - 06.05',
+} as const
+
+export const defaultWeeklyReports: WeeklyReport[] = [
   {
     id: 1,
-    weekLabel: '第 23 周',
-    dateRange: '2026.06.01 - 2026.06.05',
-    shortDateRange: '06.01 - 06.05',
+    weekLabel: defaultMeta.weekLabel,
+    dateRange: defaultMeta.dateRange,
+    shortDateRange: defaultMeta.shortDateRange,
     partLabel: '第一部分',
     title: '小程序开发',
-    summary: '围绕核心业务流程推进小程序页面与交互，优先保证主要链路可用、信息层级清晰。',
     completed: [
+      { title: '优化了识字量小程序的主包大小', description: '' },
       {
-        title: '首页与核心入口整理',
-        description: '优化首页模块排布，统一按钮、卡片与状态提示样式，提升首屏可读性。',
+        title:
+          '加了数据埋点，一个是自定义的首屏加载时间，另一个是点击看图写话的点击量',
+        description: '',
       },
-      {
-        title: '业务流程页面推进',
-        description: '完成关键页面结构搭建，并补齐页面跳转、数据展示与空状态处理。',
-      },
-      {
-        title: '接口联调与问题修复',
-        description: '配合后端完成主要接口联调，修复字段兼容、加载状态和异常提示问题。',
-      },
+      { title: '首页分享功能已上线', description: '' },
     ],
     nextPlans: [
-      {
-        title: '继续完善细节体验',
-        description: '重点处理表单校验、页面反馈、弱网状态和移动端适配问题。',
-      },
-      {
-        title: '准备阶段性验收',
-        description: '整理测试用例与问题清单，推进小程序核心流程进入可验收状态。',
-      },
+      { title: '给小程序做分包', description: '' },
+      { title: '加入错题回顾页面', description: '' },
     ],
   },
   {
     id: 2,
-    weekLabel: '第 23 周',
-    dateRange: '2026.06.01 - 2026.06.05',
-    shortDateRange: '06.01 - 06.05',
+    weekLabel: defaultMeta.weekLabel,
+    dateRange: defaultMeta.dateRange,
+    shortDateRange: defaultMeta.shortDateRange,
     partLabel: '第二部分',
-    title: '小游戏试玩平台开发',
-    summary: '本周聚焦试玩平台基础能力和页面框架，推动从内容展示到试玩转化的基础链路成型。',
+    title: '游戏试玩平台开发',
     completed: [
       {
-        title: '平台页面框架搭建',
-        description: '完成试玩平台首页、游戏列表与详情页的基础结构，统一页面栅格与信息密度。',
+        title: '做了是否引入 GSAP-skill 和动画库的对照实验',
+        description: '',
       },
       {
-        title: '试玩入口与状态流转',
-        description: '梳理试玩入口、任务状态和结果反馈逻辑，保证用户能清楚识别当前进度。',
-      },
-      {
-        title: '内容配置能力整理',
-        description: '补充游戏配置字段，支持封面、标签、试玩说明和基础排序展示。',
+        title:
+          '开发了词语搭配挑战、文字躲猫猫、翻翻卡记忆挑战小游戏（已上线游戏试玩平台）',
+        description: '',
       },
     ],
     nextPlans: [
       {
-        title: '试玩链路继续细化',
-        description: '完善任务领取、试玩计时、结果提交与异常恢复逻辑。',
+        title:
+          '为每个小游戏加入文档功能，点击切换文档，展示玩法、音效、动效等设计信息，方便在其他地方复用',
+        description: '',
       },
+      { title: '评论区功能，收集组内好的想法与优化意见', description: '' },
+    ],
+  },
+  {
+    id: 3,
+    weekLabel: defaultMeta.weekLabel,
+    dateRange: defaultMeta.dateRange,
+    shortDateRange: defaultMeta.shortDateRange,
+    partLabel: '第三部分',
+    title: '小墨作文小游戏开发',
+    completed: [
       {
-        title: '后台配置与数据埋点',
-        description: '推进配置后台字段联调，并补充关键行为埋点，便于后续观察转化效果。',
+        title: '生成了一些项目中需要用到的图片素材，部分已经上线到了试玩平台中',
+        description: '',
       },
+    ],
+    nextPlans: [
       {
-        title: '视觉规范收口',
-        description: '统一列表、标签、按钮和详情区样式，让试玩平台页面更稳定易扫读。',
+        title:
+          '音视频素材 Agent，自动去根据用户的想法，去一些网站下载一些相关的音视频',
+        description: '',
       },
+      { title: '更好的生成图片素材的方法', description: '' },
     ],
   },
 ]
+
+/** @deprecated 使用 defaultWeeklyReports */
+export const weeklyReports = defaultWeeklyReports
