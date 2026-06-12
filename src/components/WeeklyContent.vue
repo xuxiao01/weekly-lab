@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { WeeklyReport } from '../data/weeklyReports'
-import ArrowRightIcon from './icons/ArrowRightIcon.vue'
+import ArrowRightIcon from '../assets/svgs/ArrowRightIcon.vue'
 
 defineProps<{
   report: WeeklyReport

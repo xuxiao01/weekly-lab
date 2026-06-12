@@ -34,9 +34,9 @@ export const defaultWeeklyReportWeeks: WeeklyReportWeek[] = [
 ]
 
 export const defaultMeta = {
-  weekLabel: reportWeek2026W24.weekLabel,
-  dateRange: reportWeek2026W24.dateRange,
-  shortDateRange: reportWeek2026W24.shortDateRange,
+  weekLabel: "第 24 周",
+  dateRange: "2026.06.08 - 2026.06.12",
+  shortDateRange: "06.08 - 06.12",
 } as const
 
 export const defaultWeeklyReports: WeeklyReport[] = reportWeek2026W24.reports

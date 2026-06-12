@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ArrowRightIcon from './icons/ArrowRightIcon.vue'
+import ArrowRightIcon from '../assets/svgs/ArrowRightIcon.vue'
 
 defineProps<{
   canPrev: boolean
