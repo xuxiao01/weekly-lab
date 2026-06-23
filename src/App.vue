@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import {
   defaultWeeklyReportWeeks,
   type WeeklyReportWeek,
 } from './data/weeklyReports'
 import WeeklyContent from './components/WeeklyContent.vue'
 import PageNavigation from './components/PageNavigation.vue'
-import AppToolbar from './components/AppToolbar.vue'
-import MarkdownPastePanel from './components/MarkdownPastePanel.vue'
+import AppHeader from './components/layout/AppHeader.vue'
+import ReportHero from './components/layout/ReportHero.vue'
+import ReportMetaBar from './components/layout/ReportMetaBar.vue'
 import { usePageTransition } from './composables/usePageTransition'
 import { parseWeeklyMd } from './utils/parseWeeklyMd'
 import { loadReportWeeks, saveReportWeeks } from './utils/weeklyReportStorage'
@@ -26,11 +27,6 @@ const importWeekNumber = ref('')
 const importStartDate = ref('')
 const importEndDate = ref('')
 const contentRef = ref<HTMLElement | null>(null)
-const isWeekPickerOpen = ref(false)
-const isMarkdownPanelOpen = ref(false)
-const isMobile = ref(false)
-let mediaQuery: MediaQueryList | null = null
-let syncMobile: (() => void) | null = null
 
 const currentWeek = computed(() => {
   return (
@@ -80,19 +76,6 @@ onMounted(() => {
   }
 
   syncImportMeta()
-
-  mediaQuery = window.matchMedia('(max-width: 639px)')
-  syncMobile = () => {
-    isMobile.value = mediaQuery?.matches ?? false
-  }
-  syncMobile()
-  mediaQuery.addEventListener('change', syncMobile)
-})
-
-onBeforeUnmount(() => {
-  if (mediaQuery && syncMobile) {
-    mediaQuery.removeEventListener('change', syncMobile)
-  }
 })
 
 watch(markdownDraft, (value) => {
@@ -107,21 +90,9 @@ watch(totalPages, (len) => {
 
 watch([importYear, importWeekNumber], syncWeekdayRangeFromImportFields)
 
-function openMarkdownPanel() {
-  parseError.value = ''
-  syncImportMeta()
-  isMarkdownPanelOpen.value = true
-}
-
-function closeMarkdownPanel() {
-  parseError.value = ''
-  isMarkdownPanelOpen.value = false
-}
-
 function selectWeek(weekId: WeeklyReportWeek['id']) {
   currentWeekId.value = weekId
   currentPageIndex.value = 0
-  isWeekPickerOpen.value = false
 }
 
 function pad2(value: string | number) {
@@ -296,120 +267,35 @@ async function handleSubmit() {
   }
   currentWeekId.value = weekId
   currentPageIndex.value = 0
-  isMarkdownPanelOpen.value = false
 }
+
+defineExpose({ handleSubmit })
 </script>
 
 <template>
-  <div class="app">
-    <AppToolbar
-      :week-label="currentWeek.weekLabel"
-      @choose-week="isWeekPickerOpen = !isWeekPickerOpen"
-      @paste-markdown="openMarkdownPanel"
-    />
-
-    <div
-      v-if="isWeekPickerOpen && !isMobile"
-      class="week-popover"
-      role="dialog"
-      aria-label="周次选择"
-    >
-      <button
-        v-for="week in sortedWeeks"
-        :key="week.id"
-        type="button"
-        class="week-option"
-        :class="{ 'week-option--active': week.id === currentWeek.id }"
-        @click="selectWeek(week.id)"
-      >
-        <span class="week-option-label">{{ week.weekLabel }}</span>
-        <span class="week-option-date">{{ week.shortDateRange }}</span>
-      </button>
-    </div>
-
-    <header class="site-header">
-      <h1 class="site-title">
-        <span>{{ currentReport.partLabel }}｜</span>
-        <span class="site-title-accent">{{ currentReport.title }}</span>
-      </h1>
-      <p class="site-meta">{{ reportMeta }}</p>
-      <div class="mobile-actions">
-        <button
-          type="button"
-          class="mobile-action-button"
-          @click="isWeekPickerOpen = true"
-        >
-          {{ currentWeek.weekLabel }} ▾
-        </button>
-        <button
-          type="button"
-          class="mobile-action-button"
-          @click="openMarkdownPanel"
-        >
-          粘贴 Markdown
-        </button>
+  <div class="app showcase-page">
+    <AppHeader />
+    <div class="showcase-main">
+      <div class="content-area">
+        <ReportHero :title="currentReport.title" />
+        <div class="report-content">
+          <ReportMetaBar
+            :meta="reportMeta"
+            :weeks="sortedWeeks"
+            :current-week-id="currentWeek.id"
+            @select-week="selectWeek"
+          />
+          <div ref="contentRef" class="content-shell report-body">
+            <WeeklyContent :report="currentReport" />
+          </div>
+          <PageNavigation
+            :can-prev="canGoPrev"
+            :can-next="canGoNext"
+            @prev="goPrev"
+            @next="goNext"
+          />
+        </div>
       </div>
-    </header>
-
-    <div class="content-area">
-      <div ref="contentRef" class="content-shell">
-        <WeeklyContent :report="currentReport" />
-      </div>
-    </div>
-
-    <PageNavigation
-      :can-prev="canGoPrev"
-      :can-next="canGoNext"
-      @prev="goPrev"
-      @next="goNext"
-    />
-
-    <div
-      v-if="isWeekPickerOpen && isMobile"
-      class="sheet-mask"
-      @click="isWeekPickerOpen = false"
-    />
-    <div
-      v-if="isWeekPickerOpen && isMobile"
-      class="bottom-sheet week-sheet"
-      role="dialog"
-      aria-label="周次选择"
-    >
-      <div class="sheet-title">选择周次</div>
-      <button
-        v-for="week in sortedWeeks"
-        :key="week.id"
-        type="button"
-        class="week-option"
-        :class="{ 'week-option--active': week.id === currentWeek.id }"
-        @click="selectWeek(week.id)"
-      >
-        <span class="week-option-label">{{ week.weekLabel }}</span>
-        <span class="week-option-date">{{ week.shortDateRange }}</span>
-      </button>
-    </div>
-
-    <div
-      v-if="isMarkdownPanelOpen"
-      class="modal-mask"
-      @click="closeMarkdownPanel"
-    />
-    <div
-      v-if="isMarkdownPanelOpen"
-      :class="isMobile ? 'bottom-sheet markdown-sheet' : 'markdown-modal'"
-      role="dialog"
-      aria-label="粘贴 Markdown"
-    >
-      <MarkdownPastePanel
-        v-model="markdownDraft"
-        v-model:year="importYear"
-        v-model:week-number="importWeekNumber"
-        v-model:start-date="importStartDate"
-        v-model:end-date="importEndDate"
-        :error="parseError"
-        @cancel="closeMarkdownPanel"
-        @submit="handleSubmit"
-      />
     </div>
   </div>
 </template>

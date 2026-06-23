@@ -13,36 +13,34 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <nav class="page-nav">
-    <div class="page-nav-inner">
-      <button
-        type="button"
-        class="nav-btn nav-btn--prev"
-        :disabled="!canPrev"
-        @click="emit('prev')"
-      >
-        <ArrowRightIcon
-          class="nav-btn-icon nav-btn-icon--prev"
-          :size="15"
-          color="currentColor"
-          title="上一页"
-        />
-        <span>上一页</span>
-      </button>
-      <button
-        type="button"
-        class="nav-btn nav-btn--next"
-        :disabled="!canNext"
-        @click="emit('next')"
-      >
-        <span>下一页</span>
-        <ArrowRightIcon
-          class="nav-btn-icon"
-          :size="15"
-          color="currentColor"
-          title="下一页"
-        />
-      </button>
-    </div>
+  <nav class="report-pager">
+    <button
+      type="button"
+      class="report-pager-btn report-pager-btn--prev"
+      :disabled="!canPrev"
+      @click="emit('prev')"
+    >
+      <ArrowRightIcon
+        class="report-pager-icon report-pager-icon--prev"
+        :size="15"
+        color="currentColor"
+        title="上一页"
+      />
+      <span>上一页</span>
+    </button>
+    <button
+      type="button"
+      class="report-pager-btn report-pager-btn--next"
+      :disabled="!canNext"
+      @click="emit('next')"
+    >
+      <span>下一页</span>
+      <ArrowRightIcon
+        class="report-pager-icon"
+        :size="15"
+        color="currentColor"
+        title="下一页"
+      />
+    </button>
   </nav>
 </template>
