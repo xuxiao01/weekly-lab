@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.18.1",
     "gsap": "^3.15.0",
-    "vue": "^3.5.34"
+    "naive-ui": "^2.44.1",
+    "vue": "^3.5.34",
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.3",

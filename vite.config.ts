@@ -245,4 +245,9 @@ function weeklyReportsWriterPlugin(): Plugin {
 export default defineConfig({
   plugins: [weeklyReportsWriterPlugin(), vue()],
   base: '/weekly/',
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
 })
