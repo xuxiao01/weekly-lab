@@ -1,3 +1,4 @@
+import { reportWeek2026W26 } from './reports/2026-W26'
 import { reportWeek2026W24 } from './reports/2026-W24'
 import { reportWeek2026W23 } from './reports/2026-W23'
 
@@ -29,17 +30,18 @@ export interface WeeklyReportWeek {
 }
 
 export const defaultWeeklyReportWeeks: WeeklyReportWeek[] = [
+  reportWeek2026W26,
   reportWeek2026W24,
   reportWeek2026W23,
 ]
 
 export const defaultMeta = {
-  weekLabel: "第 24 周",
-  dateRange: "2026.06.08 - 2026.06.12",
-  shortDateRange: "06.08 - 06.12",
+  weekLabel: "第 26 周",
+  dateRange: "2026.06.22 - 2026.06.26",
+  shortDateRange: "06.22 - 06.26",
 } as const
 
-export const defaultWeeklyReports: WeeklyReport[] = reportWeek2026W24.reports
+export const defaultWeeklyReports: WeeklyReport[] = reportWeek2026W26.reports
 
 /** @deprecated 使用 defaultWeeklyReportWeeks */
 export const weeklyReports = defaultWeeklyReports

@@ -542,6 +542,18 @@ body {
   line-height: 1.62;
 }
 
+.item-title a,
+.item-description a {
+  color: #0f766e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.item-title a:hover,
+.item-description a:hover {
+  color: #047857;
+}
+
 .report-pager {
   display: flex;
   justify-content: center;

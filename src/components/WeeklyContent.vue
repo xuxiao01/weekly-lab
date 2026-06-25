@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { WeeklyReport } from '../data/weeklyReports'
 import ArrowRightIcon from '../assets/svgs/ArrowRightIcon.vue'
+import InlineMarkdownText from './InlineMarkdownText.vue'
 
 defineProps<{
   report: WeeklyReport
@@ -47,9 +48,11 @@ function showNextImage() {
           >
             <span class="item-index">{{ index + 1 }}</span>
             <div class="item-copy">
-              <h4 class="item-title">{{ item.title }}</h4>
+              <h4 class="item-title">
+                <InlineMarkdownText :text="item.title" />
+              </h4>
               <p v-if="item.description" class="item-description">
-                {{ item.description }}
+                <InlineMarkdownText :text="item.description" />
               </p>
             </div>
             <button
@@ -75,9 +78,11 @@ function showNextImage() {
           >
             <span class="item-index">{{ index + 1 }}</span>
             <div class="item-copy">
-              <h4 class="item-title">{{ item.title }}</h4>
+              <h4 class="item-title">
+                <InlineMarkdownText :text="item.title" />
+              </h4>
               <p v-if="item.description" class="item-description">
-                {{ item.description }}
+                <InlineMarkdownText :text="item.description" />
               </p>
             </div>
             <button
