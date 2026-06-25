@@ -10,7 +10,8 @@ import {
   type FormInst,
   type FormRules,
 } from 'naive-ui'
-import { AuthService, WEEKLY_LAB_TOKEN_KEY } from '@/services/auth'
+import { login } from '@/services/auth'
+import { HttpError } from '@/types/http'
 import type { LoginParams } from '@/types/auth'
 
 const emit = defineEmits<{
@@ -56,12 +57,12 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    const result = await AuthService.login(formModel.value)
-    localStorage.setItem(WEEKLY_LAB_TOKEN_KEY, result.token)
+    await login(formModel.value)
     message.success('登录成功')
     await router.push('/workbench')
-  } catch {
-    message.error('登录失败，请检查邮箱或密码')
+  } catch (error) {
+    const fallback = '登录失败，请检查邮箱或密码'
+    message.error(error instanceof HttpError ? error.message : fallback)
   } finally {
     loading.value = false
   }

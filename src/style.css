@@ -675,6 +675,42 @@ body {
   font-size: 0.9rem;
 }
 
+.markdown-upload-row {
+  flex-shrink: 0;
+}
+
+.markdown-file-input {
+  display: none;
+}
+
+.markdown-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d1e7dd;
+  border-radius: 8px;
+  background: #f6fffa;
+  color: #0f766e;
+  font-size: 0.86rem;
+  font-family: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.markdown-upload-btn:hover:not(:disabled) {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.markdown-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .markdown-meta-fields {
   flex-shrink: 0;
   display: grid;

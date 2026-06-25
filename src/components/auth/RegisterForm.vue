@@ -9,7 +9,8 @@ import {
   type FormInst,
   type FormRules,
 } from 'naive-ui'
-import { AuthService } from '@/services/auth'
+import { register } from '@/services/auth'
+import { HttpError } from '@/types/http'
 
 interface RegisterFormModel {
   username: string
@@ -39,8 +40,8 @@ const rules: FormRules = {
     { required: true, message: '请输入用户名', trigger: ['blur', 'input'] },
     {
       min: 2,
-      max: 20,
-      message: '用户名长度为 2 到 20 位',
+      max: 30,
+      message: '用户名长度为 2 到 30 位',
       trigger: ['blur', 'input'],
     },
   ],
@@ -82,15 +83,16 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    await AuthService.register({
+    await register({
       username: formModel.value.username,
       email: formModel.value.email,
       password: formModel.value.password,
     })
     message.success('注册成功，请登录')
     emit('switchMode', 'login')
-  } catch {
-    message.error('注册失败，请稍后重试')
+  } catch (error) {
+    const fallback = '注册失败，请稍后重试'
+    message.error(error instanceof HttpError ? error.message : fallback)
   } finally {
     loading.value = false
   }

@@ -22,6 +22,11 @@ const router = createRouter({
       name: 'Workbench',
       component: () => import('@/views/workbench/WorkbenchView.vue'),
     },
+    {
+      path: '/workbench/publish',
+      name: 'WorkbenchPublish',
+      component: () => import('@/views/workbench/MarkdownPublishView.vue'),
+    },
   ],
 })
 

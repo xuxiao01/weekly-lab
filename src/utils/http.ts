@@ -4,8 +4,15 @@ import { HttpError, type ApiErrorBody, type ApiResponse } from '../types/http'
 export const TOKEN_STORAGE_KEY = 'xuxiao_token'
 export const USER_STORAGE_KEY = 'xuxiao_user'
 
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:3000'
+function resolveBaseURL(): string {
+  const configured = import.meta.env.VITE_API_BASE_URL?.trim()
+  if (configured) return configured
+  // 开发环境走 Vite /api 代理 -> http://localhost:3000
+  if (import.meta.env.DEV) return ''
+  return 'http://localhost:3000'
+}
+
+const baseURL = resolveBaseURL()
 
 const instance = axios.create({
   baseURL,

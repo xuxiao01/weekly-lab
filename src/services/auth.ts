@@ -6,22 +6,29 @@ import type {
 import type { UserInfo } from '../types/user'
 import { http, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../utils/http'
 
+export const WEEKLY_LAB_TOKEN_KEY = 'weekly_lab_token'
+
 function saveAuthSession(payload: AuthPayload) {
   localStorage.setItem(TOKEN_STORAGE_KEY, payload.token)
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user))
+  localStorage.removeItem(WEEKLY_LAB_TOKEN_KEY)
 }
 
 function clearAuthSession() {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
   localStorage.removeItem(USER_STORAGE_KEY)
+  localStorage.removeItem(WEEKLY_LAB_TOKEN_KEY)
 }
 
 export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_STORAGE_KEY)
+  return (
+    localStorage.getItem(TOKEN_STORAGE_KEY) ||
+    localStorage.getItem(WEEKLY_LAB_TOKEN_KEY)
+  )
 }
 
 export function isAuthenticated(): boolean {
-  return !!(getStoredToken() || localStorage.getItem(WEEKLY_LAB_TOKEN_KEY))
+  return !!getStoredToken()
 }
 
 export function getStoredUser(): UserInfo | null {
@@ -49,35 +56,4 @@ export async function login(params: LoginParams): Promise<AuthPayload> {
 
 export function logout() {
   clearAuthSession()
-}
-
-export const WEEKLY_LAB_TOKEN_KEY = 'weekly_lab_token'
-
-/** 视图层 mock 认证，待接入真实接口后替换 */
-export const AuthService = {
-  login(data: LoginParams): Promise<AuthPayload> {
-    // TODO: 接入真实接口
-    // return http.post<AuthPayload>('/api/auth/login', data)
-    return Promise.resolve({
-      token: 'mock-token',
-      user: {
-        id: 1,
-        username: '小徐',
-        email: data.email,
-      },
-    })
-  },
-
-  register(data: RegisterParams): Promise<AuthPayload> {
-    // TODO: 接入真实接口
-    // return http.post<AuthPayload>('/api/auth/register', data)
-    return Promise.resolve({
-      token: 'mock-token',
-      user: {
-        id: 1,
-        username: data.username,
-        email: data.email,
-      },
-    })
-  },
 }
