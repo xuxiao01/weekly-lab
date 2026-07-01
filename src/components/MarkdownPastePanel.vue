@@ -11,6 +11,7 @@ const year = defineModel<string>('year', { required: true })
 const weekNumber = defineModel<string>('weekNumber', { required: true })
 const startDate = defineModel<string>('startDate', { required: true })
 const endDate = defineModel<string>('endDate', { required: true })
+const isPublished = defineModel<boolean>('isPublished', { default: false })
 
 const emit = defineEmits<{
   cancel: []
@@ -119,6 +120,23 @@ async function onFileChange(event: Event) {
         />
       </label>
     </div>
+    <label class="markdown-publish-toggle">
+      <span class="markdown-publish-toggleTrack">
+        <input
+          v-model="isPublished"
+          class="markdown-publish-toggleInput"
+          type="checkbox"
+          :disabled="submitting"
+        />
+        <span class="markdown-publish-toggleThumb" aria-hidden="true" />
+      </span>
+      <span class="markdown-publish-toggleCopy">
+        <span class="markdown-publish-toggleLabel">公开本周周报</span>
+        <span class="markdown-publish-toggleHint">
+          开启后可通过公开链接被他人查看（无需登录）
+        </span>
+      </span>
+    </label>
     <textarea
       v-model="model"
       class="markdown-textarea"

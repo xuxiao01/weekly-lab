@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 defineProps<{
   title: string
   description: string
-  iconTone: 'green' | 'blue' | 'orange' | 'purple'
+  iconTone: 'green' | 'blue' | 'orange' | 'purple' | 'image'
   to?: string
   disabled?: boolean
   actionLabel?: string

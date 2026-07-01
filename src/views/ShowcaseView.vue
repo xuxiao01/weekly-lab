@@ -12,26 +12,36 @@ import ReportHero from '../components/layout/ReportHero.vue'
 import ReportMetaBar from '../components/layout/ReportMetaBar.vue'
 import { usePageTransition } from '../composables/usePageTransition'
 import { yearFromDateRange } from '../composables/useWeeklyReportImport'
-import { loadReportWeeks } from '../utils/weeklyReportStorage'
+import { isAuthenticated } from '../services/auth'
+import { fetchMyWeeklyReportWeeks } from '../services/weeklyReport'
+import { HttpError } from '../types/http'
 
 const route = useRoute()
 
 const reportWeeks = ref<WeeklyReportWeek[]>(
-  loadReportWeeks(defaultWeeklyReportWeeks),
+  isAuthenticated() ? [] : defaultWeeklyReportWeeks,
 )
-const currentWeekId = ref(reportWeeks.value[0]?.id ?? defaultWeeklyReportWeeks[0]!.id)
+const loading = ref(isAuthenticated())
+const loadError = ref('')
+const loggedIn = ref(isAuthenticated())
+const currentWeekId = ref(
+  isAuthenticated() ? '' : (defaultWeeklyReportWeeks[0]?.id ?? ''),
+)
 const currentPageIndex = ref(0)
 const contentRef = ref<HTMLElement | null>(null)
 
+const hasWeeks = computed(() => reportWeeks.value.length > 0)
+
 const currentWeek = computed(() => {
+  if (!hasWeeks.value) return null
   return (
     reportWeeks.value.find((week) => week.id === currentWeekId.value) ??
     reportWeeks.value[0] ??
-    defaultWeeklyReportWeeks[0]!
+    null
   )
 })
 
-const reports = computed(() => currentWeek.value.reports)
+const reports = computed(() => currentWeek.value?.reports ?? [])
 const totalPages = computed(() => reports.value.length)
 
 const currentIndex = computed({
@@ -41,10 +51,11 @@ const currentIndex = computed({
   },
 })
 
-const currentReport = computed(() => reports.value[currentIndex.value]!)
-const reportMeta = computed(
-  () => `${yearFromDateRange(currentWeek.value.dateRange)} 年${currentWeek.value.weekLabel} · ${currentWeek.value.shortDateRange}`,
-)
+const currentReport = computed(() => reports.value[currentIndex.value] ?? null)
+const reportMeta = computed(() => {
+  if (!currentWeek.value) return ''
+  return `${yearFromDateRange(currentWeek.value.dateRange)} 年${currentWeek.value.weekLabel} · ${currentWeek.value.shortDateRange}`
+})
 const sortedWeeks = computed(() =>
   [...reportWeeks.value].sort((a, b) => {
     const dateCompare = b.dateRange.localeCompare(a.dateRange)
@@ -64,12 +75,8 @@ const canGoNext = computed(
   () => currentIndex.value < totalPages.value - 1 && !isAnimating.value,
 )
 
-function refreshReportWeeks() {
-  reportWeeks.value = loadReportWeeks(defaultWeeklyReportWeeks)
-}
-
 function applyWeekQuery(weekId: unknown) {
-  if (typeof weekId !== 'string' || !weekId) return
+  if (typeof weekId !== 'string' || !weekId || !hasWeeks.value) return
 
   const matched = reportWeeks.value.find((week) => week.id === weekId)
   if (!matched) return
@@ -78,15 +85,50 @@ function applyWeekQuery(weekId: unknown) {
   currentPageIndex.value = 0
 }
 
+function ensureCurrentWeekId() {
+  if (!hasWeeks.value) {
+    currentWeekId.value = ''
+    return
+  }
+  if (!reportWeeks.value.some((week) => week.id === currentWeekId.value)) {
+    currentWeekId.value = reportWeeks.value[0]!.id
+  }
+}
+
+async function loadWeeks() {
+  loggedIn.value = isAuthenticated()
+  loadError.value = ''
+
+  if (!loggedIn.value) {
+    reportWeeks.value = defaultWeeklyReportWeeks
+    ensureCurrentWeekId()
+    applyWeekQuery(route.query.week)
+    return
+  }
+
+  loading.value = true
+  try {
+    reportWeeks.value = await fetchMyWeeklyReportWeeks()
+    ensureCurrentWeekId()
+    applyWeekQuery(route.query.week)
+  } catch (error) {
+    loadError.value =
+      error instanceof HttpError ? error.message : '加载周报失败，请稍后重试。'
+    reportWeeks.value = []
+    currentWeekId.value = ''
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  applyWeekQuery(route.query.week)
+  void loadWeeks()
 })
 
 watch(
   () => route.query.week,
   (weekId) => {
-    refreshReportWeeks()
-    applyWeekQuery(weekId)
+    void loadWeeks().then(() => applyWeekQuery(weekId))
   },
 )
 
@@ -106,7 +148,18 @@ function selectWeek(weekId: WeeklyReportWeek['id']) {
   <div class="app showcase-page">
     <AppHeader />
     <div class="showcase-main">
-      <div class="content-area">
+      <div v-if="loading" class="showcase-status">加载周报中...</div>
+      <div v-else-if="loadError" class="showcase-status showcase-status--error">
+        {{ loadError }}
+      </div>
+      <div
+        v-else-if="loggedIn && !hasWeeks"
+        class="showcase-status"
+      >
+        暂无周报，
+        <router-link to="/workbench/publish">去工作台发布</router-link>
+      </div>
+      <div v-else-if="currentReport && currentWeek" class="content-area">
         <ReportHero :title="currentReport.title" />
         <div class="report-content">
           <ReportMetaBar

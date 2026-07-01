@@ -9,7 +9,7 @@ function resolveBaseURL(): string {
   if (configured) return configured
   // 开发环境走 Vite /api 代理 -> http://localhost:3000
   if (import.meta.env.DEV) return ''
-  return 'http://localhost:3000'
+  return 'http://101.42.137.241'
 }
 
 const baseURL = resolveBaseURL()
@@ -21,14 +21,23 @@ const instance = axios.create({
   },
 })
 
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler
+}
+
 function clearAuthStorage() {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
   localStorage.removeItem(USER_STORAGE_KEY)
 }
 
-/** 401 时预留跳转登录页，后续由路由层接入 */
 function onUnauthorized() {
-  // TODO: redirect to login page
+  if (unauthorizedHandler) {
+    unauthorizedHandler()
+    return
+  }
+  window.location.assign(import.meta.env.BASE_URL)
 }
 
 instance.interceptors.request.use((config) => {
@@ -81,5 +90,14 @@ export const http = {
   },
   post<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return request<T>({ ...config, method: 'POST', url, data })
+  },
+  put<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'PUT', url, data })
+  },
+  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'PATCH', url, data })
+  },
+  delete<T>(url: string, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'DELETE', url })
   },
 }

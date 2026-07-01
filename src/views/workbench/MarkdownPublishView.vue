@@ -4,19 +4,13 @@ import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import logoUrl from '@/assets/images/weekly-lab-logo.png'
 import MarkdownPastePanel from '@/components/MarkdownPastePanel.vue'
-import { defaultWeeklyReportWeeks, type WeeklyReportWeek } from '@/data/weeklyReports'
 import { useWeeklyReportImport } from '@/composables/useWeeklyReportImport'
-import { loadReportWeeks } from '@/utils/weeklyReportStorage'
 import ArrowRightIcon from '@/assets/svgs/ArrowRightIcon.vue'
 import '@/styles/workbench.css'
 
 const router = useRouter()
 const message = useMessage()
 const submitting = ref(false)
-
-const reportWeeks = ref<WeeklyReportWeek[]>(
-  loadReportWeeks(defaultWeeklyReportWeeks),
-)
 
 const {
   markdownDraft,
@@ -25,8 +19,9 @@ const {
   importWeekNumber,
   importStartDate,
   importEndDate,
+  isPublished,
   handleSubmit,
-} = useWeeklyReportImport(reportWeeks)
+} = useWeeklyReportImport()
 
 async function onSubmit() {
   if (submitting.value) return
@@ -62,7 +57,7 @@ function onCancel() {
           color="currentColor"
           title="返回工作台"
         />
-        <span>返回工作台</span>
+        <span>工作台</span>
       </router-link>
     </header>
 
@@ -74,6 +69,7 @@ function onCancel() {
           v-model:week-number="importWeekNumber"
           v-model:start-date="importStartDate"
           v-model:end-date="importEndDate"
+          v-model:is-published="isPublished"
           :error="parseError"
           :submitting="submitting"
           @cancel="onCancel"
