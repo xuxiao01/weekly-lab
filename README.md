@@ -161,9 +161,15 @@ npm run preview
 
 | 变量名 | 说明 |
 | --- | --- |
-| `VITE_API_BASE_URL` | 后端 API 基础地址（可选）。开发环境留空，走 Vite `/api` 代理；生产环境填写线上地址，例如 `https://api.example.com` |
+| `VITE_API_BASE_URL` | 后端 API 基础地址。开发环境留空，走 Vite `/api` 代理；**生产环境构建时必填**（写入 `.env` 或由 CI 注入），例如 `https://api.example.com` |
 
-未设置时，开发环境使用相对路径代理，生产环境默认回退到 `http://localhost:3000`。
+开发环境未设置时使用相对路径 `/api`，由 Vite 代理到本地后端。生产环境未设置时，应用不会发起 API 请求（控制台会输出配置提示）。
+
+本地生产构建示例：
+
+```bash
+VITE_API_BASE_URL=https://api.example.com npm run build
+```
 
 ## 部署说明
 
@@ -183,6 +189,7 @@ npm run build
 
 | Secret | 说明 |
 | --- | --- |
+| `VITE_API_BASE_URL` | 生产 API 基础地址（构建时注入，例如 `http://your-api-host`） |
 | `SERVER_HOST` | 服务器地址 |
 | `SERVER_USER` | SSH 用户名 |
 | `SERVER_SSH_KEY` | SSH 私钥 |

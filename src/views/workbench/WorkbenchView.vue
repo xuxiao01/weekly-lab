@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import logoUrl from '@/assets/images/weekly-lab-logo.png'
+import markdownIconUrl from '@/assets/images/line-Markdown.png'
+import ArrowRightIcon from '@/assets/svgs/ArrowRightIcon.vue'
 import WorkbenchToolCard from '@/components/workbench/WorkbenchToolCard.vue'
 import '@/styles/workbench.css'
 </script>
@@ -11,7 +13,15 @@ import '@/styles/workbench.css'
         <img :src="logoUrl" alt="Weekly Lab" width="28" height="28" />
         <span>Weekly Lab</span>
       </router-link>
-      <router-link to="/" class="workbench-headerLink">返回展示页</router-link>
+      <router-link to="/" class="workbench-headerLink">
+        <ArrowRightIcon
+          class="workbench-headerLink-icon"
+          :size="14"
+          color="currentColor"
+          title="返回展示页"
+        />
+        <span>展示页</span>
+      </router-link>
     </header>
 
     <main class="workbench-main">
@@ -24,20 +34,16 @@ import '@/styles/workbench.css'
         <WorkbenchToolCard
           title="Markdown 发布工具"
           description="粘贴 Markdown，解析为周报内容并发布"
-          icon-tone="green"
+          icon-tone="image"
           to="/workbench/publish"
           action-label="进入发布 →"
         >
           <template #icon>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M4 20h16M7 17V7l5-3 5 3v10"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img
+              class="workbenchToolCardIconImg"
+              :src="markdownIconUrl"
+              alt=""
+            />
           </template>
         </WorkbenchToolCard>
       </div>

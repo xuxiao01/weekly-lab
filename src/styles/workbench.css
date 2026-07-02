@@ -26,10 +26,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
   text-decoration: none;
   transition: color 0.2s;
+  flex-shrink: 0;
 }
 
 .workbench-headerLink-icon {
@@ -119,6 +121,21 @@
   background: #7c3aed;
 }
 
+.workbenchToolCardIcon--image {
+  background: none;
+  overflow: hidden;
+}
+
+.workbenchToolCardIcon--image .workbenchToolCardIconImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.workbenchToolCardIconImg {
+  display: block;
+}
+
 .workbenchToolCardTitle {
   margin: 0;
   font-size: 18px;
@@ -201,6 +218,90 @@
 .workbench-publishCard .markdown-action-buttons {
   justify-content: center;
   width: 100%;
+}
+
+.workbench-publishCard .markdown-publish-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.workbench-publishCard .markdown-publish-toggleTrack {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.workbench-publishCard .markdown-publish-toggleInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.workbench-publishCard .markdown-publish-toggleInput:disabled {
+  cursor: not-allowed;
+}
+
+.workbench-publishCard .markdown-publish-toggleThumb {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition: background 0.2s;
+}
+
+.workbench-publishCard .markdown-publish-toggleThumb::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s;
+}
+
+.workbench-publishCard .markdown-publish-toggleInput:checked + .markdown-publish-toggleThumb {
+  background: #0f766e;
+}
+
+.workbench-publishCard .markdown-publish-toggleInput:checked + .markdown-publish-toggleThumb::after {
+  transform: translateX(20px);
+}
+
+.workbench-publishCard .markdown-publish-toggleInput:focus-visible + .markdown-publish-toggleThumb {
+  outline: 2px solid #a7f3d0;
+  outline-offset: 2px;
+}
+
+.workbench-publishCard .markdown-publish-toggleCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workbench-publishCard .markdown-publish-toggleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.workbench-publishCard .markdown-publish-toggleHint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b7280;
 }
 
 @media (max-width: 639px) {

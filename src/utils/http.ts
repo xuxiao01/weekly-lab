@@ -4,12 +4,18 @@ import { HttpError, type ApiErrorBody, type ApiResponse } from '../types/http'
 export const TOKEN_STORAGE_KEY = 'xuxiao_token'
 export const USER_STORAGE_KEY = 'xuxiao_user'
 
+let apiMisconfigured = false
+
 function resolveBaseURL(): string {
   const configured = import.meta.env.VITE_API_BASE_URL?.trim()
   if (configured) return configured
   // 开发环境走 Vite /api 代理 -> http://localhost:3000
   if (import.meta.env.DEV) return ''
-  return 'http://localhost:3000'
+  apiMisconfigured = true
+  console.warn(
+    '[http] 生产环境未配置 VITE_API_BASE_URL，API 请求已被禁用。请在 .env 或 CI 构建环境中设置该变量。',
+  )
+  return ''
 }
 
 const baseURL = resolveBaseURL()
@@ -21,17 +27,32 @@ const instance = axios.create({
   },
 })
 
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler
+}
+
 function clearAuthStorage() {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
   localStorage.removeItem(USER_STORAGE_KEY)
 }
 
-/** 401 时预留跳转登录页，后续由路由层接入 */
 function onUnauthorized() {
-  // TODO: redirect to login page
+  if (unauthorizedHandler) {
+    unauthorizedHandler()
+    return
+  }
+  window.location.assign(import.meta.env.BASE_URL)
 }
 
 instance.interceptors.request.use((config) => {
+  if (apiMisconfigured) {
+    return Promise.reject(
+      new HttpError('未配置 VITE_API_BASE_URL，无法请求 API'),
+    )
+  }
+
   const token = localStorage.getItem(TOKEN_STORAGE_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -81,5 +102,14 @@ export const http = {
   },
   post<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return request<T>({ ...config, method: 'POST', url, data })
+  },
+  put<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'PUT', url, data })
+  },
+  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'PATCH', url, data })
+  },
+  delete<T>(url: string, config?: AxiosRequestConfig) {
+    return request<T>({ ...config, method: 'DELETE', url })
   },
 }

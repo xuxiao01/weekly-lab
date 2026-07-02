@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
   NForm,
   NFormItem,
@@ -19,6 +19,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 
 const formRef = ref<FormInst | null>(null)
@@ -59,7 +60,12 @@ async function handleSubmit() {
   try {
     await login(formModel.value)
     message.success('登录成功')
-    await router.push('/workbench')
+    const redirect = route.query.redirect
+    if (typeof redirect === 'string' && redirect.startsWith('/')) {
+      await router.push(redirect)
+    } else {
+      await router.push('/workbench')
+    }
   } catch (error) {
     const fallback = '登录失败，请检查邮箱或密码'
     message.error(error instanceof HttpError ? error.message : fallback)

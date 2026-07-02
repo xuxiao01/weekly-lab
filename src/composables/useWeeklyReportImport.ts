@@ -1,7 +1,14 @@
-import { onMounted, ref, watch, type Ref } from 'vue'
-import type { WeeklyReportWeek } from '@/data/weeklyReports'
+import { onMounted, ref, watch } from 'vue'
 import { parseWeeklyMd } from '@/utils/parseWeeklyMd'
-import { saveReportWeeks } from '@/utils/weeklyReportStorage'
+import { isAuthenticated } from '@/services/auth'
+import {
+  fetchMyWeeklyReportList,
+  saveMyWeeklyReport,
+  updateWeeklyPublicSettings,
+} from '@/services/weeklyReport'
+import { parsedReportsToPutPayload } from '@/utils/weeklyReportApiMapper'
+import { HttpError } from '@/types/http'
+import type { WeeklyReportWeek } from '@/data/weeklyReports'
 
 const MARKDOWN_DRAFT_KEY = 'weekly-showcase-markdown-draft'
 
@@ -50,38 +57,22 @@ function weekNumberFromLabel(weekLabel: string) {
   return weekLabel.match(/\d+/)?.[0] ?? ''
 }
 
-async function persistReportWeeks(nextWeeks: WeeklyReportWeek[]) {
-  saveReportWeeks(nextWeeks)
-
-  if (!import.meta.env.DEV) {
-    return
-  }
-
-  const response = await fetch('/__weekly-dev/report-weeks', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ weeks: nextWeeks }),
-  })
-
-  if (!response.ok) {
-    throw new Error('dev write failed')
-  }
+function currentIsoWeekNumber(date = new Date()) {
+  const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = utc.getUTCDay() || 7
+  utc.setUTCDate(utc.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1))
+  return Math.ceil(((utc.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
 }
 
 export type ImportSubmitResult =
   | { ok: true; weekId: string }
   | { ok: false; partialSave?: boolean }
 
-export function useWeeklyReportImport(
-  reportWeeks: Ref<WeeklyReportWeek[]>,
-  options?: {
-    defaultWeek?: () => WeeklyReportWeek
-  },
-) {
+export function useWeeklyReportImport() {
   const markdownDraft = ref('')
   const parseError = ref('')
+  const isPublished = ref(false)
   const importYear = ref('')
   const importWeekNumber = ref('')
   const importStartDate = ref('')
@@ -106,12 +97,18 @@ export function useWeeklyReportImport(
     importEndDate.value = range.end
   }
 
-  function syncImportMeta() {
-    const week = options?.defaultWeek?.() ?? reportWeeks.value[0]
-    if (!week) return
-
+  function syncImportMetaFromWeek(week: WeeklyReportWeek) {
     importYear.value = yearFromDateRange(week.dateRange)
     importWeekNumber.value = weekNumberFromLabel(week.weekLabel)
+    syncWeekdayRangeFromImportFields()
+  }
+
+  function syncImportMetaDefaults() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const weekNumber = currentIsoWeekNumber(now)
+    importYear.value = String(year)
+    importWeekNumber.value = String(weekNumber)
     syncWeekdayRangeFromImportFields()
   }
 
@@ -151,6 +148,11 @@ export function useWeeklyReportImport(
   }
 
   async function handleSubmit(): Promise<ImportSubmitResult> {
+    if (!isAuthenticated()) {
+      parseError.value = '请先登录后再发布。'
+      return { ok: false }
+    }
+
     const metaResult = buildImportMeta()
     if (!metaResult.ok) {
       parseError.value = metaResult.message
@@ -174,37 +176,47 @@ export function useWeeklyReportImport(
       shortDateRange: meta.shortDateRange,
     }))
     const weekId = `${yearFromDateRange(meta.dateRange)}-W${pad2(importWeekNumber.value)}`
-    const nextWeek: WeeklyReportWeek = {
-      id: weekId,
-      weekLabel: meta.weekLabel,
-      dateRange: meta.dateRange,
-      shortDateRange: meta.shortDateRange,
-      reports: normalizedReports,
-    }
-    const existingIndex = reportWeeks.value.findIndex((week) => week.id === weekId)
-    const nextWeeks =
-      existingIndex >= 0
-        ? reportWeeks.value.map((week) => (week.id === weekId ? nextWeek : week))
-        : [nextWeek, ...reportWeeks.value]
+    const payload = parsedReportsToPutPayload(normalizedReports, {
+      startDate: importStartDate.value,
+      endDate: importEndDate.value,
+      isPublished: isPublished.value,
+    })
 
-    reportWeeks.value = nextWeeks
     try {
-      await persistReportWeeks(nextWeeks)
-    } catch {
-      saveReportWeeks(nextWeeks)
-      parseError.value = '已保存到浏览器本地，但写入源码文件失败，请检查开发服务。'
-      return { ok: false, partialSave: true }
+      if (isPublished.value) {
+        await updateWeeklyPublicSettings(true)
+      }
+      await saveMyWeeklyReport(weekId, payload)
+    } catch (error) {
+      parseError.value =
+        error instanceof HttpError ? error.message : '发布失败，请稍后重试。'
+      return { ok: false }
     }
 
     return { ok: true, weekId }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     const saved = sessionStorage.getItem(MARKDOWN_DRAFT_KEY)
     if (saved !== null) {
       markdownDraft.value = saved
     }
-    syncImportMeta()
+
+    if (!isAuthenticated()) {
+      syncImportMetaDefaults()
+      return
+    }
+
+    try {
+      const weeks = await fetchMyWeeklyReportList()
+      if (weeks[0]) {
+        syncImportMetaFromWeek(weeks[0])
+      } else {
+        syncImportMetaDefaults()
+      }
+    } catch {
+      syncImportMetaDefaults()
+    }
   })
 
   watch(markdownDraft, (value) => {
@@ -220,7 +232,9 @@ export function useWeeklyReportImport(
     importWeekNumber,
     importStartDate,
     importEndDate,
-    syncImportMeta,
+    isPublished,
+    syncImportMetaFromWeek,
+    syncImportMetaDefaults,
     handleSubmit,
   }
 }

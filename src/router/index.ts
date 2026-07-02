@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isAuthenticated } from '@/services/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,12 @@ const router = createRouter({
       component: () => import('@/views/workbench/MarkdownPublishView.vue'),
     },
   ],
+})
+
+router.beforeEach((to) => {
+  if (to.path.startsWith('/workbench') && !isAuthenticated()) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
 })
 
 export default router
