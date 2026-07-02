@@ -1,6 +1,7 @@
 import type { WeeklyReport, WeeklyReportWeek } from '@/data/weeklyReports'
 import type {
   WeeklyReportDetail,
+  WeeklyReportListItem,
   WeeklyReportPagePayload,
   WeeklyReportPutPayload,
 } from '@/types/weeklyReport'
@@ -18,6 +19,16 @@ function normalizeItem(
 export function normalizeWeekLabel(weekLabel: string): string {
   const match = weekLabel.match(/第\s*\d+\s*周/)
   return match ? match[0].replace(/\s+/g, ' ') : weekLabel
+}
+
+export function apiListItemToWeekSummary(item: WeeklyReportListItem): WeeklyReportWeek {
+  return {
+    id: item.id,
+    weekLabel: normalizeWeekLabel(item.weekLabel),
+    dateRange: item.dateRange,
+    shortDateRange: item.shortDateRange,
+    reports: [],
+  }
 }
 
 export function apiDetailToWeek(detail: WeeklyReportDetail): WeeklyReportWeek {

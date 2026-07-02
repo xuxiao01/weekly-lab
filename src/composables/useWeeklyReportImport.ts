@@ -2,7 +2,7 @@ import { onMounted, ref, watch } from 'vue'
 import { parseWeeklyMd } from '@/utils/parseWeeklyMd'
 import { isAuthenticated } from '@/services/auth'
 import {
-  fetchMyWeeklyReportWeeks,
+  fetchMyWeeklyReportList,
   saveMyWeeklyReport,
   updateWeeklyPublicSettings,
 } from '@/services/weeklyReport'
@@ -208,7 +208,7 @@ export function useWeeklyReportImport() {
     }
 
     try {
-      const weeks = await fetchMyWeeklyReportWeeks()
+      const weeks = await fetchMyWeeklyReportList()
       if (weeks[0]) {
         syncImportMetaFromWeek(weeks[0])
       } else {

@@ -13,7 +13,11 @@ import ReportMetaBar from '../components/layout/ReportMetaBar.vue'
 import { usePageTransition } from '../composables/usePageTransition'
 import { yearFromDateRange } from '../composables/useWeeklyReportImport'
 import { isAuthenticated } from '../services/auth'
-import { fetchMyWeeklyReportWeeks } from '../services/weeklyReport'
+import {
+  fetchMyWeeklyReportList,
+  fetchWeekDetail,
+  getCachedWeekDetail,
+} from '../services/weeklyReport'
 import { HttpError } from '../types/http'
 
 const route = useRoute()
@@ -23,6 +27,9 @@ const reportWeeks = ref<WeeklyReportWeek[]>(
 )
 const loading = ref(isAuthenticated())
 const loadError = ref('')
+const detailLoading = ref(false)
+const detailError = ref('')
+const detailVersion = ref(0)
 const loggedIn = ref(isAuthenticated())
 const currentWeekId = ref(
   isAuthenticated() ? '' : (defaultWeeklyReportWeeks[0]?.id ?? ''),
@@ -33,12 +40,17 @@ const contentRef = ref<HTMLElement | null>(null)
 const hasWeeks = computed(() => reportWeeks.value.length > 0)
 
 const currentWeek = computed(() => {
+  detailVersion.value
+
   if (!hasWeeks.value) return null
-  return (
+
+  const summary =
     reportWeeks.value.find((week) => week.id === currentWeekId.value) ??
     reportWeeks.value[0] ??
     null
-  )
+  if (!summary) return null
+
+  return getCachedWeekDetail(currentWeekId.value) ?? summary
 })
 
 const reports = computed(() => currentWeek.value?.reports ?? [])
@@ -95,7 +107,7 @@ function ensureCurrentWeekId() {
   }
 }
 
-async function loadWeeks() {
+async function loadList() {
   loggedIn.value = isAuthenticated()
   loadError.value = ''
 
@@ -108,7 +120,7 @@ async function loadWeeks() {
 
   loading.value = true
   try {
-    reportWeeks.value = await fetchMyWeeklyReportWeeks()
+    reportWeeks.value = await fetchMyWeeklyReportList()
     ensureCurrentWeekId()
     applyWeekQuery(route.query.week)
   } catch (error) {
@@ -121,14 +133,44 @@ async function loadWeeks() {
   }
 }
 
+async function loadCurrentWeekDetail(force = false) {
+  if (!loggedIn.value || !currentWeekId.value) return
+
+  if (!force && getCachedWeekDetail(currentWeekId.value)) {
+    detailError.value = ''
+    detailVersion.value++
+    return
+  }
+
+  detailLoading.value = true
+  detailError.value = ''
+  try {
+    await fetchWeekDetail(currentWeekId.value, { force })
+    detailVersion.value++
+  } catch (error) {
+    detailError.value =
+      error instanceof HttpError ? error.message : '加载周报详情失败，请稍后重试。'
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+async function init() {
+  await loadList()
+  if (loggedIn.value && hasWeeks.value) {
+    await loadCurrentWeekDetail()
+  }
+}
+
 onMounted(() => {
-  void loadWeeks()
+  void init()
 })
 
 watch(
   () => route.query.week,
   (weekId) => {
-    void loadWeeks().then(() => applyWeekQuery(weekId))
+    applyWeekQuery(weekId)
+    void loadCurrentWeekDetail()
   },
 )
 
@@ -141,6 +183,7 @@ watch(totalPages, (len) => {
 function selectWeek(weekId: WeeklyReportWeek['id']) {
   currentWeekId.value = weekId
   currentPageIndex.value = 0
+  void loadCurrentWeekDetail()
 }
 </script>
 
@@ -158,6 +201,10 @@ function selectWeek(weekId: WeeklyReportWeek['id']) {
       >
         暂无周报，
         <router-link to="/workbench/publish">去工作台发布</router-link>
+      </div>
+      <div v-else-if="detailLoading" class="showcase-status">加载周报中...</div>
+      <div v-else-if="detailError" class="showcase-status showcase-status--error">
+        {{ detailError }}
       </div>
       <div v-else-if="currentReport && currentWeek" class="content-area">
         <ReportHero :title="currentReport.title" />
