@@ -1,3 +1,4 @@
+import { reportWeek2026W27 } from './reports/2026-W27'
 import { reportWeek2026W26 } from './reports/2026-W26'
 import { reportWeek2026W24 } from './reports/2026-W24'
 import { reportWeek2026W23 } from './reports/2026-W23'
@@ -30,6 +31,7 @@ export interface WeeklyReportWeek {
 }
 
 export const defaultWeeklyReportWeeks: WeeklyReportWeek[] = [
+  reportWeek2026W27,
   reportWeek2026W26,
   reportWeek2026W24,
   reportWeek2026W23,

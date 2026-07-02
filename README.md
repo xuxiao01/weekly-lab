@@ -11,7 +11,7 @@
 
 Weekly Lab（仓库名 `weekly-showcase`）是一个基于 Vue 3 的前端单页应用，用于把周报内容以演示文稿的方式展示，并在工作台通过 Markdown 发布新周报。
 
-展示页每一页对应一个业务模块（如「小程序开发」「游戏试玩平台开发」），支持多周次切换与 GSAP 翻页动效。周报数据当前保存在浏览器 `localStorage`；开发环境下发布时还会同步写入 `src/data/weeklyReports.ts`，方便本地固化默认数据。登录与注册已对接 **xuxiao-api**（`POST /api/auth/login`、`/api/auth/register`），周报后端接口待接入。
+展示页每一页对应一个业务模块（如「小程序开发」「小墨作文小游戏开发」），支持多周次切换与 GSAP 翻页动效。未登录访客浏览内置静态演示数据；登录用户可在工作台发布周报，数据保存在浏览器 `localStorage`，开发环境下还可同步写入 `src/data/` 源码。认证已对接 **xuxiao-api**（登录 / 注册）；周报后端 CRUD 接口文档见 [`docs/api/api.md`](docs/api/api.md)，前端持久化仍以本地存储为主。
 
 适合个人周报归档、组内周会演示等场景。
 
@@ -21,29 +21,31 @@ Weekly Lab（仓库名 `weekly-showcase`）是一个基于 Vue 3 的前端单页
 
 - 全屏单页展示，类 PPT / Keynote 翻页体验
 - GSAP 页面切换动效，支持 `prefers-reduced-motion`
-- 多周次管理：顶部工具栏切换周次，桌面端弹出选择、移动端底部抽屉
-- 支持 URL 查询参数 `?week=` 定位到指定周次（发布后自动跳转）
-- 列表项支持附加 Markdown 图片，点击可预览
+- 多周次管理：顶部周次选择器切换历史周报
+- 支持 URL 查询参数 `?week=` 定位到指定周次
+- 列表项支持 Markdown 图片，点击可全屏预览
+- 条目标题支持行内 Markdown 超链接 `[文字](url)`
 - 顶部 Header：未登录显示「登录」，已登录显示「工作台」
 
 ### 工作台（`/workbench`）
 
-- Markdown 发布工具入口卡片
+- Markdown 发布工具入口
 - 发布页（`/workbench/publish`）：粘贴或上传 `.md` 文件，配置年份、周数、日期范围后发布
 - 发布成功后跳转展示页并定位到新周次
 
 ### 认证（`/login`）
 
-- 登录 / 注册表单（Naive UI），注册与登录在同一页面切换
+- 登录 / 注册表单（Naive UI），同一页面切换
 - 对接 xuxiao-api，Token 存储在 `localStorage`（`xuxiao_token`）
 - 开发环境通过 Vite 代理 `/api` → `http://localhost:3000`
 
 ### 数据与解析
 
 - Markdown 按 `# 一级标题` 自动分页，解析「本周完成」「未来展望」列表
-- 支持标题写法 `第一部分｜小程序名`，或仅写模块名（自动补全部分序号）
+- 支持标题写法 `第一部分｜模块名`，或仅写模块名（自动补全部分序号）
 - 数据持久化：`localStorage` 保存多周周报；`sessionStorage` 保存粘贴草稿
-- 开发模式：发布时通过 Vite 中间件回写 `weeklyReports.ts` 源码
+- 内置静态演示数据：`src/data/reports/`（第 23、24、26、27 周）
+- 开发模式：发布时通过 Vite 中间件回写 `weeklyReports.ts` 与 `reports/*.ts` 源码
 
 ### 响应式
 
@@ -64,17 +66,23 @@ Weekly Lab（仓库名 `weekly-showcase`）是一个基于 Vue 3 的前端单页
 
 ```text
 weekly-showcase/
-├── .github/workflows/       # CI 部署配置
-├── public/                  # 静态资源
+├── .github/workflows/       # GitHub Actions 部署
+├── docs/
+│   ├── api/                 # xuxiao-api 接口文档
+│   ├── backend-pending/     # 后端待办与第二期规划
+│   └── engineering-notes/   # 工程复盘笔记
+├── public/
 ├── src/
 │   ├── assets/              # 图片、SVG 图标
 │   ├── components/          # 展示、认证、工作台、布局组件
 │   ├── composables/         # 翻页动效、周报导入、媒体查询等
-│   ├── data/                # 默认周报数据（weeklyReports.ts）
-│   ├── router/              # 路由定义
-│   ├── services/            # 认证、用户相关 API
+│   ├── data/
+│   │   ├── reports/         # 各周静态周报（如 2026-W27.ts）
+│   │   └── weeklyReports.ts # 默认周报聚合入口
+│   ├── router/
+│   ├── services/            # 认证相关 API
 │   ├── styles/              # auth.css、workbench.css
-│   ├── types/               # 类型定义
+│   ├── types/
 │   ├── utils/               # Markdown 解析、HTTP、本地存储
 │   ├── views/               # ShowcaseView、AuthView、WorkbenchView 等
 │   ├── App.vue
@@ -117,7 +125,7 @@ npm run preview
 
 ### 与后端联调
 
-认证接口依赖 **xuxiao-api** 在本地 `3000` 端口运行。开发环境下前端请求 `/api/*` 会由 Vite 代理到 `http://localhost:3000`，无需额外配置 `VITE_API_BASE_URL`。
+认证接口依赖 **xuxiao-api** 在本地 `3000` 端口运行。开发环境下前端请求 `/api/*` 会由 Vite 代理到 `http://localhost:3000`，一般无需配置 `VITE_API_BASE_URL`。
 
 生产构建 `base` 为 `/weekly/`，部署到子路径时需与 `vite.config.ts` 保持一致。
 
@@ -151,6 +159,7 @@ npm run preview
 - `## 本周完成`、`## 未来展望`（兼容 `下周计划`）下的 `-`、`*` 或数字列表会被解析为条目
 - 标题可写 `第一部分｜模块名`，也可只写模块名并由解析器自动补「第一部分」「第二部分」等
 - 列表项后可直接跟 Markdown 图片：`![说明](图片地址)`
+- 条目标题内可写超链接：`[链接文字](https://example.com)`
 - 页面内可写日期行，如 `2026 年第 23 周 · 06.01 - 06.05`（可选）
 
 在工作台发布页填写年份、周数与日期后点击 **确认导入**，即可更新对应周次内容。
@@ -195,7 +204,7 @@ npm run build
 | `SERVER_SSH_KEY` | SSH 私钥 |
 | `SERVER_PORT` | SSH 端口 |
 
-具体部署路径与服务器环境以工作流文件为准。
+具体部署路径以工作流文件为准。
 
 ### 静态资源托管
 
@@ -203,11 +212,11 @@ npm run build
 
 ## 后续计划
 
-- 周报数据接入 xuxiao-api 后端 CRUD（当前仍为 localStorage + 开发环境写源码）
+- 周报数据全面接入 xuxiao-api 后端 CRUD（当前以 localStorage + 静态数据为主，见 [`docs/backend-pending/`](docs/backend-pending/pending-updates.md)）
 - 工作台路由登录守卫
+- 公开分享 URL 与复制链接
 - 导出当前周次为 `.md` 文件
 - 补充单元测试（Markdown 解析器、存储逻辑）
-- 401 未授权时自动跳转登录页
 
 ## License
 
