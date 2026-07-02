@@ -30,6 +30,7 @@ const loadError = ref('')
 const detailLoading = ref(false)
 const detailError = ref('')
 const detailVersion = ref(0)
+const listLoaded = ref(false)
 const loggedIn = ref(isAuthenticated())
 const currentWeekId = ref(
   isAuthenticated() ? '' : (defaultWeeklyReportWeeks[0]?.id ?? ''),
@@ -107,14 +108,16 @@ function ensureCurrentWeekId() {
   }
 }
 
-async function loadList() {
+async function loadWeeks() {
   loggedIn.value = isAuthenticated()
   loadError.value = ''
+  listLoaded.value = false
 
   if (!loggedIn.value) {
     reportWeeks.value = defaultWeeklyReportWeeks
     ensureCurrentWeekId()
     applyWeekQuery(route.query.week)
+    listLoaded.value = true
     return
   }
 
@@ -123,6 +126,7 @@ async function loadList() {
     reportWeeks.value = await fetchMyWeeklyReportList()
     ensureCurrentWeekId()
     applyWeekQuery(route.query.week)
+    listLoaded.value = true
   } catch (error) {
     loadError.value =
       error instanceof HttpError ? error.message : '加载周报失败，请稍后重试。'
@@ -133,10 +137,10 @@ async function loadList() {
   }
 }
 
-async function loadCurrentWeekDetail(force = false) {
-  if (!loggedIn.value || !currentWeekId.value) return
+async function loadWeekDetail(weekKey: string, force = false) {
+  if (!loggedIn.value || !weekKey) return
 
-  if (!force && getCachedWeekDetail(currentWeekId.value)) {
+  if (!force && getCachedWeekDetail(weekKey)) {
     detailError.value = ''
     detailVersion.value++
     return
@@ -145,7 +149,7 @@ async function loadCurrentWeekDetail(force = false) {
   detailLoading.value = true
   detailError.value = ''
   try {
-    await fetchWeekDetail(currentWeekId.value, { force })
+    await fetchWeekDetail(weekKey, { force })
     detailVersion.value++
   } catch (error) {
     detailError.value =
@@ -156,9 +160,9 @@ async function loadCurrentWeekDetail(force = false) {
 }
 
 async function init() {
-  await loadList()
+  await loadWeeks()
   if (loggedIn.value && hasWeeks.value) {
-    await loadCurrentWeekDetail()
+    await loadWeekDetail(currentWeekId.value)
   }
 }
 
@@ -169,8 +173,19 @@ onMounted(() => {
 watch(
   () => route.query.week,
   (weekId) => {
+    if (!listLoaded.value) return
+
     applyWeekQuery(weekId)
-    void loadCurrentWeekDetail()
+
+    const weekKey =
+      typeof weekId === 'string' && weekId ? weekId : currentWeekId.value
+    if (!loggedIn.value || !weekKey) return
+    if (getCachedWeekDetail(weekKey)) {
+      detailVersion.value++
+      return
+    }
+
+    void loadWeekDetail(weekKey)
   },
 )
 
@@ -183,7 +198,7 @@ watch(totalPages, (len) => {
 function selectWeek(weekId: WeeklyReportWeek['id']) {
   currentWeekId.value = weekId
   currentPageIndex.value = 0
-  void loadCurrentWeekDetail()
+  void loadWeekDetail(weekId)
 }
 </script>
 

@@ -4,12 +4,18 @@ import { HttpError, type ApiErrorBody, type ApiResponse } from '../types/http'
 export const TOKEN_STORAGE_KEY = 'xuxiao_token'
 export const USER_STORAGE_KEY = 'xuxiao_user'
 
+let apiMisconfigured = false
+
 function resolveBaseURL(): string {
   const configured = import.meta.env.VITE_API_BASE_URL?.trim()
   if (configured) return configured
   // 开发环境走 Vite /api 代理 -> http://localhost:3000
   if (import.meta.env.DEV) return ''
-  return 'http://101.42.137.241'
+  apiMisconfigured = true
+  console.warn(
+    '[http] 生产环境未配置 VITE_API_BASE_URL，API 请求已被禁用。请在 .env 或 CI 构建环境中设置该变量。',
+  )
+  return ''
 }
 
 const baseURL = resolveBaseURL()
@@ -41,6 +47,12 @@ function onUnauthorized() {
 }
 
 instance.interceptors.request.use((config) => {
+  if (apiMisconfigured) {
+    return Promise.reject(
+      new HttpError('未配置 VITE_API_BASE_URL，无法请求 API'),
+    )
+  }
+
   const token = localStorage.getItem(TOKEN_STORAGE_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
