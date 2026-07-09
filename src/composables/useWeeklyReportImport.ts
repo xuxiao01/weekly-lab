@@ -1,12 +1,14 @@
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { parseWeeklyMd } from '@/utils/parseWeeklyMd'
 import { isAuthenticated } from '@/services/auth'
 import {
   fetchMyWeeklyReportList,
+  getMyWeeklyReport,
   saveMyWeeklyReport,
   updateWeeklyPublicSettings,
 } from '@/services/weeklyReport'
-import { parsedReportsToPutPayload } from '@/utils/weeklyReportApiMapper'
+import { apiDetailToWeek, parsedReportsToPutPayload } from '@/utils/weeklyReportApiMapper'
+import { reportsToMarkdown } from '@/utils/weeklyReportMarkdown'
 import { HttpError } from '@/types/http'
 import type { WeeklyReportWeek } from '@/data/weeklyReports'
 
@@ -57,6 +59,23 @@ function weekNumberFromLabel(weekLabel: string) {
   return weekLabel.match(/\d+/)?.[0] ?? ''
 }
 
+function weekNumberFromKey(weekKey: string) {
+  return weekKey.match(/W(\d{1,2})$/)?.[1] ?? ''
+}
+
+function inputDateFromFullDate(value: string) {
+  const match = value.match(/(\d{4})\.(\d{2})\.(\d{2})/)
+  return match ? `${match[1]}-${match[2]}-${match[3]}` : ''
+}
+
+function inputDateRangeFromDateRange(dateRange: string) {
+  const [start = '', end = ''] = dateRange.split(/\s*-\s*/)
+  return {
+    start: inputDateFromFullDate(start),
+    end: inputDateFromFullDate(end),
+  }
+}
+
 function currentIsoWeekNumber(date = new Date()) {
   const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = utc.getUTCDay() || 7
@@ -69,7 +88,7 @@ export type ImportSubmitResult =
   | { ok: true; weekId: string }
   | { ok: false; partialSave?: boolean }
 
-export function useWeeklyReportImport() {
+export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
   const markdownDraft = ref('')
   const parseError = ref('')
   const isPublished = ref(false)
@@ -77,6 +96,24 @@ export function useWeeklyReportImport() {
   const importWeekNumber = ref('')
   const importStartDate = ref('')
   const importEndDate = ref('')
+  const editLoading = ref(false)
+  const editLoadError = ref('')
+  const suppressMetaSync = ref(false)
+
+  async function setImportFields(fields: {
+    year: string
+    weekNumber: string
+    startDate?: string
+    endDate?: string
+  }) {
+    suppressMetaSync.value = true
+    importYear.value = fields.year
+    importWeekNumber.value = fields.weekNumber
+    if (fields.startDate) importStartDate.value = fields.startDate
+    if (fields.endDate) importEndDate.value = fields.endDate
+    await nextTick()
+    suppressMetaSync.value = false
+  }
 
   function syncWeekdayRangeFromImportFields() {
     const year = Number(importYear.value)
@@ -97,19 +134,54 @@ export function useWeeklyReportImport() {
     importEndDate.value = range.end
   }
 
-  function syncImportMetaFromWeek(week: WeeklyReportWeek) {
-    importYear.value = yearFromDateRange(week.dateRange)
-    importWeekNumber.value = weekNumberFromLabel(week.weekLabel)
-    syncWeekdayRangeFromImportFields()
+  async function syncImportMetaFromWeek(week: WeeklyReportWeek) {
+    const range = inputDateRangeFromDateRange(week.dateRange)
+    await setImportFields({
+      year: yearFromDateRange(week.dateRange),
+      weekNumber: weekNumberFromLabel(week.weekLabel),
+      startDate: range.start,
+      endDate: range.end,
+    })
   }
 
-  function syncImportMetaDefaults() {
+  async function syncImportMetaDefaults() {
     const now = new Date()
     const year = now.getFullYear()
     const weekNumber = currentIsoWeekNumber(now)
-    importYear.value = String(year)
-    importWeekNumber.value = String(weekNumber)
+    await setImportFields({
+      year: String(year),
+      weekNumber: String(weekNumber),
+    })
     syncWeekdayRangeFromImportFields()
+  }
+
+  async function loadEditWeek(weekKey: string) {
+    if (!isAuthenticated()) {
+      editLoadError.value = '请先登录后再编辑。'
+      return
+    }
+
+    editLoading.value = true
+    editLoadError.value = ''
+
+    try {
+      const detail = await getMyWeeklyReport(weekKey)
+      const week = apiDetailToWeek(detail)
+      const range = inputDateRangeFromDateRange(week.dateRange)
+      await setImportFields({
+        year: yearFromDateRange(week.dateRange),
+        weekNumber: weekNumberFromKey(weekKey) || weekNumberFromLabel(week.weekLabel),
+        startDate: range.start,
+        endDate: range.end,
+      })
+      markdownDraft.value = reportsToMarkdown(week.reports)
+      isPublished.value = detail.isPublished
+    } catch (error) {
+      editLoadError.value =
+        error instanceof HttpError ? error.message : '加载周报失败，请稍后重试。'
+    } finally {
+      editLoading.value = false
+    }
   }
 
   function buildImportMeta() {
@@ -175,7 +247,7 @@ export function useWeeklyReportImport() {
       dateRange: meta.dateRange,
       shortDateRange: meta.shortDateRange,
     }))
-    const weekId = `${yearFromDateRange(meta.dateRange)}-W${pad2(importWeekNumber.value)}`
+    const weekId = options?.editWeekKey || `${yearFromDateRange(meta.dateRange)}-W${pad2(importWeekNumber.value)}`
     const payload = parsedReportsToPutPayload(normalizedReports, {
       startDate: importStartDate.value,
       endDate: importEndDate.value,
@@ -203,19 +275,24 @@ export function useWeeklyReportImport() {
     }
 
     if (!isAuthenticated()) {
-      syncImportMetaDefaults()
+      await syncImportMetaDefaults()
+      return
+    }
+
+    if (options?.editWeekKey) {
+      await loadEditWeek(options.editWeekKey)
       return
     }
 
     try {
       const weeks = await fetchMyWeeklyReportList()
       if (weeks[0]) {
-        syncImportMetaFromWeek(weeks[0])
+        await syncImportMetaFromWeek(weeks[0])
       } else {
-        syncImportMetaDefaults()
+        await syncImportMetaDefaults()
       }
     } catch {
-      syncImportMetaDefaults()
+      await syncImportMetaDefaults()
     }
   })
 
@@ -223,11 +300,16 @@ export function useWeeklyReportImport() {
     sessionStorage.setItem(MARKDOWN_DRAFT_KEY, value)
   })
 
-  watch([importYear, importWeekNumber], syncWeekdayRangeFromImportFields)
+  watch([importYear, importWeekNumber], () => {
+    if (suppressMetaSync.value) return
+    syncWeekdayRangeFromImportFields()
+  })
 
   return {
     markdownDraft,
     parseError,
+    editLoading,
+    editLoadError,
     importYear,
     importWeekNumber,
     importStartDate,
@@ -235,6 +317,7 @@ export function useWeeklyReportImport() {
     isPublished,
     syncImportMetaFromWeek,
     syncImportMetaDefaults,
+    loadEditWeek,
     handleSubmit,
   }
 }

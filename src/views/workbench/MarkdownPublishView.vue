@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import logoUrl from '@/assets/images/weekly-lab-logo.png'
 import MarkdownPastePanel from '@/components/MarkdownPastePanel.vue'
@@ -9,19 +9,28 @@ import ArrowRightIcon from '@/assets/svgs/ArrowRightIcon.vue'
 import '@/styles/workbench.css'
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 const submitting = ref(false)
+const editWeekKey = computed(() =>
+  typeof route.query.week === 'string' ? route.query.week : '',
+)
+const isEditMode = computed(() => Boolean(editWeekKey.value))
 
 const {
   markdownDraft,
   parseError,
+  editLoading,
+  editLoadError,
   importYear,
   importWeekNumber,
   importStartDate,
   importEndDate,
   isPublished,
   handleSubmit,
-} = useWeeklyReportImport()
+} = useWeeklyReportImport({ editWeekKey: editWeekKey.value || undefined })
+
+const visibleError = computed(() => editLoadError.value || parseError.value)
 
 async function onSubmit() {
   if (submitting.value) return
@@ -31,7 +40,7 @@ async function onSubmit() {
     const result = await handleSubmit()
     if (!result.ok) return
 
-    message.success('周报发布成功')
+    message.success(isEditMode.value ? '周报已更新' : '周报发布成功')
     await router.push({ path: '/', query: { week: result.weekId } })
   } finally {
     submitting.value = false
@@ -63,14 +72,21 @@ function onCancel() {
 
     <main class="workbench-main">
       <div class="workbench-publishCard">
+        <div v-if="editLoading" class="workbench-inlineStatus">加载周报中...</div>
         <MarkdownPastePanel
+          v-else
           v-model="markdownDraft"
           v-model:year="importYear"
           v-model:week-number="importWeekNumber"
           v-model:start-date="importStartDate"
           v-model:end-date="importEndDate"
           v-model:is-published="isPublished"
-          :error="parseError"
+          :title="isEditMode ? '编辑 Markdown 周报' : '粘贴 Markdown'"
+          :hint="isEditMode ? '已从当前周报生成 Markdown，修改后会覆盖保存这一周。' : undefined"
+          :submit-label="isEditMode ? '保存修改' : '确认导入'"
+          :submitting-label="isEditMode ? '保存中...' : '发布中...'"
+          :meta-readonly="isEditMode"
+          :error="visibleError"
           :submitting="submitting"
           @cancel="onCancel"
           @submit="onSubmit"

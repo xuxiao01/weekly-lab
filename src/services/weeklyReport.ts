@@ -30,6 +30,17 @@ export function getMyWeeklyReport(weekKey: string) {
   return http.get<WeeklyReportDetail>(`/api/weekly-reports/${encodeURIComponent(weekKey)}`)
 }
 
+export async function deleteMyWeeklyReport(weekKey: string) {
+  await http.delete<null>(`/api/weekly-reports/${encodeURIComponent(weekKey)}`)
+  invalidateWeekDetailCache(weekKey)
+}
+
+export function getPublicWeeklyReport(username: string, weekKey: string) {
+  return http.get<WeeklyReportDetail>(
+    `/api/public/users/${encodeURIComponent(username)}/weekly-reports/${encodeURIComponent(weekKey)}`,
+  )
+}
+
 export async function saveMyWeeklyReport(weekKey: string, payload: WeeklyReportPutPayload) {
   const detail = await http.put<WeeklyReportDetail>(
     `/api/weekly-reports/${encodeURIComponent(weekKey)}`,
