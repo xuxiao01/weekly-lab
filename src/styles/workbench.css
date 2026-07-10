@@ -76,6 +76,224 @@
   justify-content: start;
 }
 
+.workbench-grid--tools {
+  grid-template-columns: repeat(2, minmax(0, 420px));
+  justify-content: start;
+}
+
+.workbench-section {
+  margin-top: 36px;
+}
+
+.workbench-section--flush {
+  margin-top: 0;
+}
+
+.workbench-sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.workbench-sectionTitle {
+  margin: 0 0 6px;
+  font-size: 22px;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.workbench-sectionDesc {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.workbench-secondaryBtn,
+.workbench-primaryBtn,
+.workbench-textBtn,
+.workbench-actionBtn {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.workbench-secondaryBtn {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.workbench-primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #0f766e;
+  background: #0f766e;
+  color: #fff;
+}
+
+.workbench-textBtn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0f766e;
+}
+
+.workbench-secondaryBtn:disabled,
+.workbench-actionBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.workbench-inlineStatus,
+.workbench-empty,
+.workbench-reportList {
+  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 32px rgba(15, 118, 110, 0.06);
+}
+
+.workbench-inlineStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 104px;
+  padding: 20px;
+  border-radius: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.workbench-inlineStatus--error {
+  color: #b91c1c;
+}
+
+.workbench-empty {
+  padding: 28px;
+  border-radius: 12px;
+}
+
+.workbench-empty h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.workbench-empty p {
+  margin: 0 0 18px;
+  color: #6b7280;
+}
+
+.workbench-reportList {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.workbench-reportRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.workbench-reportRow + .workbench-reportRow {
+  border-top: 1px solid #e5e7eb;
+}
+
+.workbench-reportMain {
+  min-width: 0;
+}
+
+.workbench-reportTitleLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.workbench-reportTitleLine h3 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: #111827;
+}
+
+.workbench-statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.workbench-statusBadge--public {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.workbench-reportMain p {
+  margin: 0 0 8px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.workbench-reportMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.workbench-reportActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.workbench-actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.workbench-actionBtn:hover {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.workbench-actionBtn--danger {
+  color: #b91c1c;
+}
+
+.workbench-actionBtn--danger:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .workbenchToolCard {
   display: flex;
   flex-direction: column;
@@ -134,6 +352,11 @@
 
 .workbenchToolCardIconImg {
   display: block;
+}
+
+.workbenchToolCardSvg {
+  width: 22px;
+  height: 22px;
 }
 
 .workbenchToolCardTitle {
@@ -321,6 +544,26 @@
   .workbench-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .workbench-sectionHead {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workbench-reportRow {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .workbench-reportActions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .workbench-actionBtn {
+    flex: 1 1 72px;
   }
 
   .workbenchToolCard {

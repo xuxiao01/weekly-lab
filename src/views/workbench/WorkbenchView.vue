@@ -30,7 +30,7 @@ import '@/styles/workbench.css'
         <p class="workbench-desc">使用 Markdown 发布你的周报</p>
       </div>
 
-      <div class="workbench-grid workbench-grid--single">
+      <div class="workbench-grid workbench-grid--tools">
         <WorkbenchToolCard
           title="Markdown 发布工具"
           description="粘贴 Markdown，解析为周报内容并发布"
@@ -44,6 +44,31 @@ import '@/styles/workbench.css'
               :src="markdownIconUrl"
               alt=""
             />
+          </template>
+        </WorkbenchToolCard>
+        <WorkbenchToolCard
+          title="周报管理工具"
+          description="查看、编辑、删除周报，并生成公开分享链接"
+          icon-tone="blue"
+          to="/workbench/reports"
+          action-label="进入管理 →"
+        >
+          <template #icon>
+            <svg
+              class="workbenchToolCardSvg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M8 3h8l4 4v14H4V3h4Z" />
+              <path d="M16 3v5h5" />
+              <path d="M8 13h8" />
+              <path d="M8 17h5" />
+            </svg>
           </template>
         </WorkbenchToolCard>
       </div>

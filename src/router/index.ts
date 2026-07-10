@@ -28,6 +28,16 @@ const router = createRouter({
       name: 'WorkbenchPublish',
       component: () => import('@/views/workbench/MarkdownPublishView.vue'),
     },
+    {
+      path: '/workbench/reports',
+      name: 'WorkbenchReports',
+      component: () => import('@/views/workbench/WeeklyReportManageView.vue'),
+    },
+    {
+      path: '/share/:username/:weekKey',
+      name: 'PublicShare',
+      component: () => import('@/views/PublicShareView.vue'),
+    },
   ],
 })
 

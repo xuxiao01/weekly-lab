@@ -4,6 +4,11 @@ import { ref } from 'vue'
 defineProps<{
   error?: string
   submitting?: boolean
+  title?: string
+  hint?: string
+  submitLabel?: string
+  submittingLabel?: string
+  metaReadonly?: boolean
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -53,9 +58,9 @@ async function onFileChange(event: Event) {
 
 <template>
   <div class="markdown-paste">
-    <h2 class="markdown-paste-title">粘贴 Markdown</h2>
+    <h2 class="markdown-paste-title">{{ title ?? '粘贴 Markdown' }}</h2>
     <p class="markdown-paste-hint">
-      支持标题、日期、列表；列表项后可紧跟一张或多张 Markdown 图片。
+      {{ hint ?? '支持标题、日期、列表；列表项后可紧跟一张或多张 Markdown 图片。' }}
     </p>
     <div class="markdown-upload-row">
       <input
@@ -84,6 +89,7 @@ async function onFileChange(event: Event) {
           max="2100"
           inputmode="numeric"
           aria-label="年份"
+          :readonly="metaReadonly"
         />
       </label>
       <label class="markdown-field">
@@ -97,6 +103,7 @@ async function onFileChange(event: Event) {
             max="53"
             inputmode="numeric"
             aria-label="周数"
+            :readonly="metaReadonly"
           />
           周
         </span>
@@ -160,7 +167,7 @@ async function onFileChange(event: Event) {
           :disabled="submitting"
           @click="emit('submit')"
         >
-          {{ submitting ? '发布中...' : '确认导入' }}
+          {{ submitting ? (submittingLabel ?? '发布中...') : (submitLabel ?? '确认导入') }}
         </button>
       </div>
     </div>
