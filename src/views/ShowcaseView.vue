@@ -10,6 +10,7 @@ import PageNavigation from '../components/PageNavigation.vue'
 import AppHeader from '../components/layout/AppHeader.vue'
 import ReportHero from '../components/layout/ReportHero.vue'
 import ReportMetaBar from '../components/layout/ReportMetaBar.vue'
+import PublicShareView from './PublicShareView.vue'
 import { usePageTransition } from '../composables/usePageTransition'
 import { yearFromDateRange } from '../composables/useWeeklyReportImport'
 import { isAuthenticated } from '../services/auth'
@@ -21,6 +22,12 @@ import {
 import { HttpError } from '../types/http'
 
 const route = useRoute()
+
+const isPublicShareQuery = computed(
+  () =>
+    typeof route.query.shareUser === 'string' &&
+    typeof route.query.shareWeek === 'string',
+)
 
 const reportWeeks = ref<WeeklyReportWeek[]>(
   isAuthenticated() ? [] : defaultWeeklyReportWeeks,
@@ -203,7 +210,8 @@ function selectWeek(weekId: WeeklyReportWeek['id']) {
 </script>
 
 <template>
-  <div class="app showcase-page">
+  <PublicShareView v-if="isPublicShareQuery" />
+  <div v-else class="app showcase-page">
     <AppHeader />
     <div class="showcase-main">
       <div v-if="loading" class="showcase-status">加载周报中...</div>

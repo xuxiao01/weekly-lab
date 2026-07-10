@@ -20,10 +20,18 @@ const currentPageIndex = ref(0)
 const contentRef = ref<HTMLElement | null>(null)
 
 const username = computed(() =>
-  typeof route.params.username === 'string' ? route.params.username : '',
+  typeof route.params.username === 'string'
+    ? route.params.username
+    : typeof route.query.shareUser === 'string'
+      ? route.query.shareUser
+      : '',
 )
 const weekKey = computed(() =>
-  typeof route.params.weekKey === 'string' ? route.params.weekKey : '',
+  typeof route.params.weekKey === 'string'
+    ? route.params.weekKey
+    : typeof route.query.shareWeek === 'string'
+      ? route.query.shareWeek
+      : '',
 )
 const reports = computed(() => week.value?.reports ?? [])
 const totalPages = computed(() => reports.value.length)
