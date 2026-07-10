@@ -42,7 +42,10 @@ function formatUpdatedAt(value: string) {
 
 function shareUrl(username: string, weekKey: string) {
   const base = import.meta.env.BASE_URL
-  return `${window.location.origin}${base}share/${encodeURIComponent(username)}/${encodeURIComponent(weekKey)}`
+  const url = new URL(base, window.location.origin)
+  url.searchParams.set('shareUser', username)
+  url.searchParams.set('shareWeek', weekKey)
+  return url.toString()
 }
 
 async function copyText(value: string) {
