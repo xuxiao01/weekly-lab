@@ -1,4 +1,4 @@
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 import { parseWeeklyMd } from '@/utils/parseWeeklyMd'
 import { isAuthenticated } from '@/services/auth'
 import {
@@ -88,7 +88,9 @@ export type ImportSubmitResult =
   | { ok: true; weekId: string }
   | { ok: false; partialSave?: boolean }
 
-export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
+export function useWeeklyReportImport(options?: {
+  editWeekKey?: MaybeRefOrGetter<string | undefined>
+}) {
   const markdownDraft = ref('')
   const parseError = ref('')
   const isPublished = ref(false)
@@ -99,6 +101,11 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
   const editLoading = ref(false)
   const editLoadError = ref('')
   const suppressMetaSync = ref(false)
+  const initialized = ref(false)
+
+  function currentEditWeekKey() {
+    return toValue(options?.editWeekKey) || ''
+  }
 
   async function setImportFields(fields: {
     year: string
@@ -163,6 +170,7 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
 
     editLoading.value = true
     editLoadError.value = ''
+    parseError.value = ''
 
     try {
       const detail = await getMyWeeklyReport(weekKey)
@@ -247,7 +255,7 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
       dateRange: meta.dateRange,
       shortDateRange: meta.shortDateRange,
     }))
-    const weekId = options?.editWeekKey || `${yearFromDateRange(meta.dateRange)}-W${pad2(importWeekNumber.value)}`
+    const weekId = currentEditWeekKey() || `${yearFromDateRange(meta.dateRange)}-W${pad2(importWeekNumber.value)}`
     const payload = parsedReportsToPutPayload(normalizedReports, {
       startDate: importStartDate.value,
       endDate: importEndDate.value,
@@ -268,19 +276,14 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
     return { ok: true, weekId }
   }
 
-  onMounted(async () => {
-    const saved = sessionStorage.getItem(MARKDOWN_DRAFT_KEY)
-    if (saved !== null) {
-      markdownDraft.value = saved
-    }
-
+  async function initializeImport(editWeekKey = currentEditWeekKey()) {
     if (!isAuthenticated()) {
       await syncImportMetaDefaults()
       return
     }
 
-    if (options?.editWeekKey) {
-      await loadEditWeek(options.editWeekKey)
+    if (editWeekKey) {
+      await loadEditWeek(editWeekKey)
       return
     }
 
@@ -294,6 +297,16 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
     } catch {
       await syncImportMetaDefaults()
     }
+  }
+
+  onMounted(async () => {
+    const saved = sessionStorage.getItem(MARKDOWN_DRAFT_KEY)
+    if (saved !== null) {
+      markdownDraft.value = saved
+    }
+
+    await initializeImport()
+    initialized.value = true
   })
 
   watch(markdownDraft, (value) => {
@@ -304,6 +317,14 @@ export function useWeeklyReportImport(options?: { editWeekKey?: string }) {
     if (suppressMetaSync.value) return
     syncWeekdayRangeFromImportFields()
   })
+
+  watch(
+    currentEditWeekKey,
+    async (weekKey, previousWeekKey) => {
+      if (!initialized.value || weekKey === previousWeekKey) return
+      await initializeImport(weekKey)
+    },
+  )
 
   return {
     markdownDraft,

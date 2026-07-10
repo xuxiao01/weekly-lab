@@ -28,7 +28,7 @@ const {
   importEndDate,
   isPublished,
   handleSubmit,
-} = useWeeklyReportImport({ editWeekKey: editWeekKey.value || undefined })
+} = useWeeklyReportImport({ editWeekKey })
 
 const visibleError = computed(() => editLoadError.value || parseError.value)
 

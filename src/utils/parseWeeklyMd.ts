@@ -80,6 +80,15 @@ function parseDateLine(line: string) {
   }
 }
 
+function appendDescription(item: ReportListItem, line: string) {
+  const description = line.trim()
+  if (!description) return
+
+  item.description = item.description
+    ? `${item.description}\n${description}`
+    : description
+}
+
 export function parseWeeklyMd(
   markdown: string,
   meta: ReportMetaDefaults,
@@ -148,6 +157,11 @@ export function parseWeeklyMd(
       }
       currentPage[currentSection].push(item)
       currentItem = item
+      continue
+    }
+
+    if (currentPage && currentSection && currentItem) {
+      appendDescription(currentItem, line)
     }
   }
 

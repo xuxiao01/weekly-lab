@@ -5,11 +5,18 @@ function imageLines(images?: string[]) {
   return (images ?? []).filter(Boolean).map((src) => `![](${src})`)
 }
 
+function descriptionLines(description?: string) {
+  const trimmed = description?.trim()
+  if (!trimmed) return []
+  return trimmed.split(/\r?\n/).map((line) => `  ${line}`)
+}
+
 function listLines(items: WeeklyReport['completed']) {
   if (items.length === 0) return ['']
 
   return items.flatMap((item, index) => {
     const lines = [`${index + 1}. ${item.title}`]
+    lines.push(...descriptionLines(item.description))
     lines.push(...imageLines(item.images))
     return lines
   })
