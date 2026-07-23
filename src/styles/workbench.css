@@ -77,7 +77,7 @@
 }
 
 .workbench-grid--tools {
-  grid-template-columns: repeat(2, minmax(0, 420px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: start;
 }
 
@@ -245,6 +245,11 @@
   color: #15803d;
 }
 
+.workbench-statusBadge--ppt {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
 .workbench-reportMain p {
   margin: 0 0 8px;
   color: #4b5563;
@@ -282,6 +287,18 @@
   border-color: #99f6e4;
   background: #f0fdfa;
   color: #0f766e;
+}
+
+.workbench-actionBtn--primary {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #fff;
+}
+
+.workbench-actionBtn--primary:hover {
+  border-color: #115e59;
+  background: #115e59;
+  color: #fff;
 }
 
 .workbench-actionBtn--danger {
@@ -525,6 +542,12 @@
   font-size: 12px;
   line-height: 1.5;
   color: #6b7280;
+}
+
+@media (max-width: 899px) and (min-width: 640px) {
+  .workbench-grid--tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 639px) {

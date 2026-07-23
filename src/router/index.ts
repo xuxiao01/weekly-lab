@@ -34,6 +34,21 @@ const router = createRouter({
       component: () => import('@/views/workbench/WeeklyReportManageView.vue'),
     },
     {
+      path: '/workbench/ppts',
+      name: 'WorkbenchPpts',
+      component: () => import('@/views/workbench/PptListView.vue'),
+    },
+    {
+      path: '/workbench/ppts/:pptId',
+      name: 'WorkbenchPptShowcase',
+      component: () => import('@/views/workbench/PptShowcaseView.vue'),
+    },
+    {
+      path: '/share/ppts/:pptId',
+      name: 'PublicPptShowcase',
+      component: () => import('@/views/workbench/PptShowcaseView.vue'),
+    },
+    {
       path: '/share/:username/:weekKey',
       name: 'PublicShare',
       component: () => import('@/views/PublicShareView.vue'),

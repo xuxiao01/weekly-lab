@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import logoUrl from '@/assets/images/weekly-lab-logo.png'
 import markdownIconUrl from '@/assets/images/line-Markdown.png'
+import { EaselOutline } from '@vicons/ionicons5'
 import ArrowRightIcon from '@/assets/svgs/ArrowRightIcon.vue'
 import WorkbenchToolCard from '@/components/workbench/WorkbenchToolCard.vue'
 import '@/styles/workbench.css'
@@ -27,7 +28,7 @@ import '@/styles/workbench.css'
     <main class="workbench-main">
       <div class="workbench-hero">
         <h1 class="workbench-title">工作台</h1>
-        <p class="workbench-desc">使用 Markdown 发布你的周报</p>
+        <p class="workbench-desc">选择工具，发布和管理你的内容</p>
       </div>
 
       <div class="workbench-grid workbench-grid--tools">
@@ -69,6 +70,17 @@ import '@/styles/workbench.css'
               <path d="M8 13h8" />
               <path d="M8 17h5" />
             </svg>
+          </template>
+        </WorkbenchToolCard>
+        <WorkbenchToolCard
+          title="PPT 发布工具"
+          description="查看已创建的 PPT，并进入演示页面"
+          icon-tone="orange"
+          to="/workbench/ppts"
+          action-label="进入工具 →"
+        >
+          <template #icon>
+            <EaselOutline class="workbenchToolCardSvg" />
           </template>
         </WorkbenchToolCard>
       </div>
