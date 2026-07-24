@@ -27,7 +27,7 @@ function publicPresentationUrl(presentationId: string) {
     name: 'PublicPptShowcase',
     params: { pptId: presentationId },
   }).href
-  return new URL(path, window.location.origin).toString()
+  return new URL(`${import.meta.env.BASE_URL}${path}`, window.location.origin).toString()
 }
 
 async function copyText(value: string) {
